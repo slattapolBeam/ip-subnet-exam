@@ -49,7 +49,7 @@
         </button>
     </div>
 
-    <div id="screenTeacher" class="max-w-5xl w-full bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 hidden border border-slate-700 animate-fade-in flex flex-col h-[90vh]">
+    <div id="screenTeacher" class="max-w-6xl w-full bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 hidden border border-slate-700 animate-fade-in flex flex-col h-[90vh]">
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
@@ -58,10 +58,15 @@
                 <p class="text-slate-400 text-sm">ข้อมูลอัปเดตแบบเรียลไทม์ (Real-time)</p>
             </div>
             
-            <div class="flex gap-3">
+            <div class="flex gap-3 flex-wrap justify-end">
+                <button id="btnToggleRound" class="bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600 hover:text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
+                    <i id="roundIcon" class="fa-solid fa-calculator"></i> <span id="roundModeText">ปัดเศษ: ปิด</span>
+                </button>
+
                 <button id="btnSortMode" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
                     <i id="sortIcon" class="fa-solid fa-arrow-down-1-9"></i> <span id="sortModeText">เรียงตามเลขที่</span>
                 </button>
+                
                 <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
                     <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
                 </button>
@@ -123,9 +128,10 @@
         
         window.globalScoreData = {};
         
-        // ตัวแปรสำหรับระบบเรียงข้อมูล (Sorting)
+        // ตัวแปรสำหรับระบบควบคุมหน้าต่าง
         let rawScoresList = [];
         let currentSortMode = 'time'; // 'time' หรือ 'number'
+        let isRoundingEnabled = false; // ตัวแปรสำหรับเปิด/ปิด การปัดเศษคะแนน
 
         const fieldNames = {
             'mask': 'Subnet Mask',
@@ -173,12 +179,31 @@
                     window.globalScoreData[docSnap.id] = data; 
                 });
                 
-                // นำไปประมวลผลจัดเรียงข้อมูล
                 applySortingAndRender();
             }, (error) => { console.error("Error fetching scores:", error); });
         }
 
-        // --- ระบบสลับการเรียงลำดับข้อมูล (Sorting Logic) ---
+        // --- ระบบเปิด/ปิด การปัดเศษคะแนน ---
+        document.getElementById('btnToggleRound').addEventListener('click', () => {
+            isRoundingEnabled = !isRoundingEnabled;
+            const icon = document.getElementById('roundIcon');
+            const text = document.getElementById('roundModeText');
+            
+            if (isRoundingEnabled) {
+                text.textContent = 'ปัดเศษ: เปิด';
+                icon.className = 'fa-solid fa-wand-magic-sparkles';
+                document.getElementById('btnToggleRound').classList.replace('bg-amber-600/20', 'bg-amber-600');
+                document.getElementById('btnToggleRound').classList.replace('text-amber-400', 'text-white');
+            } else {
+                text.textContent = 'ปัดเศษ: ปิด';
+                icon.className = 'fa-solid fa-calculator';
+                document.getElementById('btnToggleRound').classList.replace('bg-amber-600', 'bg-amber-600/20');
+                document.getElementById('btnToggleRound').classList.replace('text-white', 'text-amber-400');
+            }
+            applySortingAndRender();
+        });
+
+        // --- ระบบสลับการเรียงลำดับข้อมูล ---
         document.getElementById('btnSortMode').addEventListener('click', () => {
             const icon = document.getElementById('sortIcon');
             const text = document.getElementById('sortModeText');
@@ -199,10 +224,8 @@
             let sortedList = [...rawScoresList];
             
             if (currentSortMode === 'time') {
-                // เรียงตามเวลาที่ส่ง (ล่าสุดขึ้นก่อน)
                 sortedList.sort((a, b) => b.timestamp - a.timestamp);
             } else if (currentSortMode === 'number') {
-                // เรียงตามเลขที่ (ดึงตัวเลขจาก string "เลขที่ xx - ชื่อ")
                 sortedList.sort((a, b) => {
                     const numA = parseInt(a.studentName.match(/\d+/)?.[0] || 0);
                     const numB = parseInt(b.studentName.match(/\d+/)?.[0] || 0);
@@ -227,7 +250,14 @@
             scores.forEach((entry, index) => {
                 const date = new Date(entry.timestamp);
                 const timeString = `${date.toLocaleDateString('th-TH')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} น.`;
-                const percentage = (entry.score / entry.maxScore) * 100;
+                
+                // ตรวจสอบสถานะการปัดเศษคะแนน
+                let displayScore = entry.score;
+                if (isRoundingEnabled) {
+                    displayScore = Math.round(entry.score); // ใช้ Math.round เพื่อปัดตามหลักคณิตศาสตร์
+                }
+
+                const percentage = (displayScore / entry.maxScore) * 100;
                 let scoreColor = "text-red-400";
                 if (percentage >= 80) scoreColor = "text-emerald-400 font-bold";
                 else if (percentage >= 50) scoreColor = "text-yellow-400";
@@ -236,7 +266,7 @@
                     <tr class="hover:bg-slate-800/50 transition border-b border-slate-700/50">
                         <td class="px-6 py-4 font-medium">${index + 1}</td>
                         <td class="px-6 py-4 text-white font-medium">${entry.studentName}</td>
-                        <td class="px-6 py-4 text-center ${scoreColor}">${entry.score} / ${entry.maxScore}</td>
+                        <td class="px-6 py-4 text-center ${scoreColor}">${displayScore} / ${entry.maxScore}</td>
                         <td class="px-6 py-4 text-xs text-slate-500">${timeString}</td>
                         <td class="px-6 py-4 text-center space-x-2">
                             <button onclick="viewDetails('${entry.id}')" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition text-sm" title="ดูข้อผิด">
@@ -252,7 +282,6 @@
             });
         }
 
-        // --- ฟังก์ชันทำงานของปุ่ม จัดการ ---
         window.deleteScore = async function(docId) {
             if (confirm("⚠️ แน่ใจหรือไม่ที่จะลบคะแนนของนักศึกษาคนนี้?\nการลบจะไม่สามารถกู้คืนได้")) {
                 try {

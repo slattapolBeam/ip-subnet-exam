@@ -3,116 +3,239 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard - IP Subnetting</title>
+    <title>IP Subnetting Exam</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Sarabun', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .loader { border: 4px solid #334155; border-top: 4px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* สไตล์ใหม่สำหรับกล่องแยก Octet */
+        .octet-container { display: flex; align-items: center; background-color: #1e293b; border: 2px solid #334155; border-radius: 0.5rem; padding: 0.5rem 0.75rem; transition: all 0.3s ease; }
+        .octet-container:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+        .octet-container.correct { border-color: #10b981; background-color: rgba(16, 185, 129, 0.1); }
+        .octet-container.correct i, .octet-container.correct span { color: #10b981; }
+        .octet-container.wrong { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+        .octet-container.wrong i, .octet-container.wrong span { color: #ef4444; }
+        
+        .octet-input { width: 100%; max-width: 3.5rem; background: transparent; text-align: center; color: white; outline: none; font-size: 1.1rem; font-weight: 500; }
+        
+        .progress-bar { transition: width 0.5s ease-in-out; }
         @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .animate-fade-in { animation: fadeInScale 0.4s ease-out forwards; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .loader { border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 relative">
 
     <div id="loadingOverlay" class="absolute inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center">
         <div class="loader mb-4"></div>
-        <p class="text-slate-400 font-medium">กำลังเชื่อมต่อระบบฐานข้อมูล...</p>
+        <p class="text-slate-400 font-medium">กำลังเตรียมห้องสอบ...</p>
     </div>
 
-    <div id="screenTeacherLogin" class="max-w-md w-full bg-slate-800 rounded-2xl shadow-2xl p-8 text-center hidden border border-slate-700 animate-fade-in relative">
-        <div class="w-20 h-20 bg-emerald-600/20 text-emerald-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 mt-4">
-            <i class="fa-solid fa-lock"></i>
+    <div id="screenStudentLogin" class="max-w-md w-full bg-slate-800 rounded-2xl shadow-2xl p-8 text-center hidden border border-slate-700 animate-fade-in">
+        <div class="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 mt-4">
+            <i class="fa-solid fa-id-card"></i>
         </div>
-        <h2 class="text-2xl font-bold mb-2">เข้าสู่ระบบอาจารย์</h2>
-        <p class="text-slate-400 mb-6 text-sm">กรุณากรอกข้อมูลเพื่อเข้าดูคะแนนของนักศึกษา</p>
+        <h2 class="text-2xl font-bold mb-2">ลงทะเบียนทำแบบทดสอบ</h2>
+        <p class="text-slate-400 mb-6 text-sm">คะแนนของคุณจะถูกบันทึกและส่งให้อาจารย์โดยอัตโนมัติ</p>
 
-        <div class="space-y-4 mb-6 text-left">
+        <div class="mb-6 space-y-4 text-left">
             <div>
-                <label class="block text-slate-300 text-sm font-bold mb-2">อีเมลผู้ใช้งาน</label>
-                <input type="email" id="teacherEmailInput" placeholder="email@example.com" class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <label class="block text-slate-300 text-sm font-bold mb-2">ชื่อจริง</label>
+                <input type="text" id="firstNameInput" placeholder="กรอกชื่อจริง..." class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-slate-300 text-sm font-bold mb-2">รหัสผ่าน</label>
-                <input type="password" id="teacherPasswordInput" placeholder="••••••••" class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                <label class="block text-slate-300 text-sm font-bold mb-2">นามสกุล</label>
+                <input type="text" id="lastNameInput" placeholder="กรอกนามสกุล..." class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
-            <p id="teacherLoginError" class="text-red-400 text-sm hidden text-center mt-2 font-medium"><i class="fa-solid fa-circle-exclamation"></i> อีเมลหรือรหัสผ่านไม่ถูกต้อง!</p>
+            <div>
+                <label class="block text-slate-300 text-sm font-bold mb-2">เลขที่</label>
+                <input type="number" id="studentNumberInput" placeholder="กรอกเลขที่..." class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            </div>
         </div>
-        <button id="btnLogin" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition shadow-lg">
-            เข้าสู่ระบบ
+
+        <button id="btnStartIntro" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg">
+            เข้าสู่แบบทดสอบ
         </button>
     </div>
 
-    <div id="screenTeacher" class="max-w-6xl w-full bg-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 hidden border border-slate-700 animate-fade-in flex flex-col h-[90vh]">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chalkboard-user text-emerald-400"></i> กระดานคะแนนนักศึกษา
-                </h2>
-                <p class="text-slate-400 text-sm">ข้อมูลอัปเดตแบบเรียลไทม์ (Real-time)</p>
-            </div>
-            
-            <div class="flex gap-3 flex-wrap justify-end">
-                <button id="btnToggleRound" class="bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600 hover:text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
-                    <i id="roundIcon" class="fa-solid fa-calculator"></i> <span id="roundModeText">ปัดเศษ: ปิด</span>
-                </button>
+    <div id="screenStart" class="max-w-md w-full bg-slate-800 rounded-2xl shadow-2xl p-8 text-center hidden border border-slate-700 animate-fade-in">
+        <div class="w-20 h-20 bg-blue-600/20 text-blue-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+            <i class="fa-solid fa-network-wired"></i>
+        </div>
+        <h1 class="text-3xl font-bold mb-2">Subnet Challenge</h1>
+        <p class="text-slate-400 mb-6">สวัสดี <span id="displayStudentName" class="text-blue-400 font-bold"></span></p>
+        
+        <div class="bg-slate-700/50 rounded-xl p-4 mb-8 text-left text-sm text-slate-300">
+            <ul class="list-disc list-inside space-y-2">
+                <li>โจทย์จะสุ่ม IP และ Subnet Mask ให้</li>
+                <li>มีทั้งหมด 3 ข้อ (สุ่มโจทย์ Class C ทั้งหมด)</li>
+                <li>1 ข้อ ตอบได้ 1 ครั้ง กรุณาตรวจสอบให้แน่ใจก่อนกดยืนยัน</li>
+            </ul>
+        </div>
 
-                <button id="btnSortMode" class="bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
-                    <i id="sortIcon" class="fa-solid fa-arrow-down-1-9"></i> <span id="sortModeText">เรียงตามเลขที่</span>
-                </button>
-                
-                <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
-                </button>
+        <button id="btnStartGame" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition transform hover:-translate-y-1 hover:shadow-blue-500/25">
+            เริ่มทำข้อที่ 1
+        </button>
+    </div>
+
+    <div id="screenPlay" class="max-w-2xl w-full bg-slate-800 rounded-2xl shadow-2xl overflow-hidden hidden border border-slate-700">
+        <div class="bg-slate-900 p-4 flex justify-between items-center border-b border-slate-700">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg font-bold text-sm">
+                    ข้อที่ <span id="currentRoundDisplay">1</span> / 3
+                </div>
             </div>
         </div>
 
-        <div class="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden flex-grow overflow-y-auto relative">
-            <table class="w-full text-left text-sm text-slate-300">
-                <thead class="text-xs text-slate-400 uppercase bg-slate-800/50 sticky top-0 z-10 shadow-md">
-                    <tr>
-                        <th class="px-6 py-4">ลำดับ</th>
-                        <th class="px-6 py-4">ข้อมูลนักศึกษา</th>
-                        <th class="px-6 py-4 text-center">คะแนนที่ได้</th>
-                        <th class="px-6 py-4">ส่งเมื่อ (เวลา)</th>
-                        <th class="px-6 py-4 text-center">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody" class="divide-y divide-slate-700"></tbody>
-            </table>
-            
-            <div id="emptyBoard" class="hidden absolute inset-0 flex flex-col items-center justify-center text-slate-500">
-                <i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i>
-                <p>ยังไม่มีนักศึกษาส่งคะแนน</p>
+        <div class="w-full bg-slate-700 h-1.5">
+            <div id="progressBar" class="bg-blue-500 h-1.5 progress-bar" style="width: 33%;"></div>
+        </div>
+
+        <div class="p-6 md:p-8 relative">
+            <div id="actionModal" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-30 hidden flex flex-col items-center justify-center p-4 rounded-b-2xl">
+                <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-600 max-w-sm w-full p-6 text-center animate-fade-in">
+                    <div id="modalStateConfirm">
+                        <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">ยืนยันการส่งคำตอบ?</h3>
+                        <p class="text-slate-400 text-sm mb-6">ตรวจสอบความถูกต้องอีกครั้ง 1 ข้อสามารถส่งคำตอบได้เพียงครั้งเดียวเท่านั้น</p>
+                        <div class="flex gap-3">
+                            <button id="btnCancelSubmit" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 rounded-lg transition">ยกเลิก</button>
+                            <button id="btnConfirmSubmit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded-lg transition">ยืนยันการส่ง</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="savingOverlay" class="absolute inset-0 bg-slate-800/90 backdrop-blur flex flex-col items-center justify-center z-20 hidden">
+                <div class="loader mb-4 border-emerald-500"></div>
+                <p class="text-emerald-400 font-bold mt-4">กำลังบันทึกคะแนนส่งอาจารย์...</p>
+                <p class="text-slate-400 text-sm mt-2">กรุณารอสักครู่ (อาจใช้เวลาถึง 8 วินาที)</p>
+            </div>
+
+            <div class="text-center mb-8">
+                <p class="text-slate-400 text-sm uppercase tracking-widest mb-2">โจทย์ของคุณคือ</p>
+                <div class="text-3xl md:text-5xl font-black text-white tracking-wider flex items-center justify-center gap-2">
+                    <span id="targetIpDisplay" class="text-blue-400">0.0.0.0</span>
+                    <span id="targetMaskDisplay" class="text-slate-500">/0</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 uppercase font-semibold">1. Subnet Mask</label>
+                    <div class="octet-container" id="group-mask">
+                        <i class="fa-solid fa-mask text-slate-500 mr-2 text-sm w-4"></i>
+                        <div class="flex items-center w-full justify-between">
+                            <input type="text" id="ans-mask-1" class="octet-input" maxlength="3" autocomplete="off" placeholder="255">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-mask-2" class="octet-input" maxlength="3" autocomplete="off" placeholder="255">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-mask-3" class="octet-input" maxlength="3" autocomplete="off" placeholder="255">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-mask-4" class="octet-input" maxlength="3" autocomplete="off" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 uppercase font-semibold">2. Network ID</label>
+                    <div class="octet-container" id="group-network">
+                        <i class="fa-solid fa-sitemap text-slate-500 mr-2 text-sm w-4"></i>
+                        <div class="flex items-center w-full justify-between">
+                            <input type="text" id="ans-network-1" class="octet-input" maxlength="3" autocomplete="off" placeholder="192">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-network-2" class="octet-input" maxlength="3" autocomplete="off" placeholder="168">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-network-3" class="octet-input" maxlength="3" autocomplete="off" placeholder="1">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-network-4" class="octet-input" maxlength="3" autocomplete="off" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1 md:col-span-2 md:w-1/2 md:mx-auto">
+                    <label class="text-xs text-slate-400 uppercase font-semibold">3. Broadcast Address</label>
+                    <div class="octet-container" id="group-broadcast">
+                        <i class="fa-solid fa-bullhorn text-slate-500 mr-2 text-sm w-4"></i>
+                        <div class="flex items-center w-full justify-between">
+                            <input type="text" id="ans-broadcast-1" class="octet-input" maxlength="3" autocomplete="off" placeholder="192">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-broadcast-2" class="octet-input" maxlength="3" autocomplete="off" placeholder="168">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-broadcast-3" class="octet-input" maxlength="3" autocomplete="off" placeholder="1">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-broadcast-4" class="octet-input" maxlength="3" autocomplete="off" placeholder="255">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 uppercase font-semibold">4. First Usable Host</label>
+                    <div class="octet-container" id="group-first">
+                        <i class="fa-solid fa-arrow-right-to-bracket text-slate-500 mr-2 text-sm w-4"></i>
+                        <div class="flex items-center w-full justify-between">
+                            <input type="text" id="ans-first-1" class="octet-input" maxlength="3" autocomplete="off" placeholder="192">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-first-2" class="octet-input" maxlength="3" autocomplete="off" placeholder="168">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-first-3" class="octet-input" maxlength="3" autocomplete="off" placeholder="1">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-first-4" class="octet-input" maxlength="3" autocomplete="off" placeholder="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs text-slate-400 uppercase font-semibold">5. Last Usable Host</label>
+                    <div class="octet-container" id="group-last">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-slate-500 mr-2 text-sm w-4"></i>
+                        <div class="flex items-center w-full justify-between">
+                            <input type="text" id="ans-last-1" class="octet-input" maxlength="3" autocomplete="off" placeholder="192">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-last-2" class="octet-input" maxlength="3" autocomplete="off" placeholder="168">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-last-3" class="octet-input" maxlength="3" autocomplete="off" placeholder="1">
+                            <span class="text-slate-500 font-bold pb-2 text-xl">.</span>
+                            <input type="text" id="ans-last-4" class="octet-input" maxlength="3" autocomplete="off" placeholder="254">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex justify-between items-center border-t border-slate-700 pt-6">
+                <button id="btnSubmitRound" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition duration-200 shadow-lg shadow-emerald-500/20">
+                    ส่งคำตอบข้อนี้
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="detailsModal" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-50 hidden flex flex-col items-center justify-center p-4">
-        <div class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-600 max-w-2xl w-full flex flex-col max-h-[85vh] animate-fade-in">
-            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800 rounded-t-2xl">
-                <div>
-                    <h3 class="text-xl font-bold text-white mb-1"><i class="fa-solid fa-magnifying-glass-chart text-blue-400 mr-2"></i> รายละเอียดการตรวจคำตอบ</h3>
-                    <p class="text-slate-400 text-sm" id="modalStudentName"></p>
-                </div>
-                <button id="btnCloseModal" class="text-slate-400 hover:text-white transition p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="screenEnd" class="max-w-md w-full bg-slate-800 rounded-2xl shadow-2xl p-8 text-center hidden border border-slate-700 animate-fade-in">
+        <div id="endIcon" class="w-24 h-24 rounded-full flex items-center justify-center text-5xl mx-auto mb-6 bg-emerald-500/20 text-emerald-500">
+            <i class="fa-solid fa-check-circle"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-2">ส่งคำตอบสำเร็จ!</h2>
+        <p class="text-slate-400 mb-6">อาจารย์ได้รับคะแนนของคุณแล้ว</p>
+        
+        <div class="bg-slate-900 rounded-xl p-6 mb-8 border border-slate-700">
+            <div class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+                <span id="finalScoreDisplay">0</span>
             </div>
-            
-            <div class="p-6 overflow-y-auto flex-grow space-y-6" id="modalHistoryContent">
-                </div>
+            <p class="text-slate-500 uppercase tracking-widest text-sm">คะแนนที่ได้</p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB0K8Q5lbxbETBEDaPLp_IGea7Ly1QfEfE",
@@ -125,223 +248,254 @@
         
         const appId = 'subnet-quiz-app';
         let app, auth, db, currentUser = null;
-        
-        window.globalScoreData = {};
-        
-        // ตัวแปรสำหรับระบบควบคุมหน้าต่าง
-        let rawScoresList = [];
-        let currentSortMode = 'time'; // 'time' หรือ 'number'
-        let isRoundingEnabled = false; // ตัวแปรสำหรับเปิด/ปิด การปัดเศษคะแนน
 
-        const fieldNames = {
-            'mask': 'Subnet Mask',
-            'network': 'Network ID',
-            'broadcast': 'Broadcast Address',
-            'first': 'First Usable Host',
-            'last': 'Last Usable Host'
-        };
+        // ตัวแปรระบบเกม
+        let studentName = "";
+        const totalRounds = 3;
+        let currentRound = 1;
+        let score = 0;
+        const pointsPerQuestion = 10;
+        let questionPool = [];
+        let currentSolution = { mask: "", network: "", broadcast: "", first: "", last: "" };
+        let examHistory = []; // ตัวแปรใหม่ สำหรับจดประวัติการตอบของนักศึกษา
 
-        try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } catch (e) { console.error(e); }
+        // ฟังก์ชันคำนวณต่างๆ
+        function ipToInt(ip) { return ip.split('.').reduce((int, octet) => ((int << 8) + parseInt(octet, 10)), 0) >>> 0; }
+        function intToIp(int) { return [(int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255].join('.'); }
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
 
-        if (auth) {
-            signInAnonymously(auth).catch(e => console.error("Auth Error:", e));
-            onAuthStateChanged(auth, (user) => {
-                currentUser = user;
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('screenTeacherLogin').classList.remove('hidden');
+        function hideAllScreens() {
+            ['screenStudentLogin', 'screenStart', 'screenPlay', 'screenEnd'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
             });
         }
 
-        document.getElementById('btnLogin').addEventListener('click', () => {
-            const email = document.getElementById('teacherEmailInput').value.trim();
-            const password = document.getElementById('teacherPasswordInput').value;
-
-            if (email === "beam1136@hotmail.com" && password === "10072542@Passw0rd") {
-                document.getElementById('screenTeacherLogin').classList.add('hidden');
-                document.getElementById('screenTeacher').classList.remove('hidden');
-                loadScores();
-            } else {
-                document.getElementById('teacherLoginError').classList.remove('hidden');
-            }
-        });
-
-        function loadScores() {
-            if (!currentUser || !db) return;
-            const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'subnet_scores');
+        function generateRandomQuestion() {
+            // ล็อกเป็น Class C (192.168) เสมอ
+            let ip1 = 192; 
+            let ip2 = 168; 
             
-            onSnapshot(scoresRef, (snapshot) => {
-                rawScoresList = [];
-                window.globalScoreData = {};
+            // สุ่ม /24 ถึง /29
+            const possibleMasksC = [24, 25, 26, 27, 28, 29];
+            let mask = possibleMasksC[Math.floor(Math.random() * possibleMasksC.length)];
+            
+            // สุ่ม 2 Octet หลัง
+            let ip3 = Math.floor(Math.random() * 256); 
+            let ip4 = Math.floor(Math.random() * 256);
 
-                snapshot.forEach((docSnap) => { 
-                    const data = docSnap.data();
-                    rawScoresList.push({ id: docSnap.id, ...data }); 
-                    window.globalScoreData[docSnap.id] = data; 
-                });
-                
-                applySortingAndRender();
-            }, (error) => { console.error("Error fetching scores:", error); });
+            const ipString = `${ip1}.${ip2}.${ip3}.${ip4}`;
+            const ipInt = ipToInt(ipString);
+            
+            const maskInt = (0xFFFFFFFF << (32 - mask)) >>> 0;
+            const networkInt = (ipInt & maskInt) >>> 0;
+            const broadcastInt = (networkInt | (~maskInt) >>> 0) >>> 0;
+
+            currentSolution = {
+                mask: intToIp(maskInt), 
+                network: intToIp(networkInt), 
+                broadcast: intToIp(broadcastInt),
+                first: intToIp(networkInt + 1), 
+                last: intToIp(broadcastInt - 1)
+            };
+
+            document.getElementById('targetIpDisplay').textContent = ipString;
+            document.getElementById('targetMaskDisplay').textContent = '/' + mask;
         }
 
-        // --- ระบบเปิด/ปิด การปัดเศษคะแนน ---
-        document.getElementById('btnToggleRound').addEventListener('click', () => {
-            isRoundingEnabled = !isRoundingEnabled;
-            const icon = document.getElementById('roundIcon');
-            const text = document.getElementById('roundModeText');
+        function startRound() {
+            document.getElementById('currentRoundDisplay').textContent = currentRound;
+            document.getElementById('progressBar').style.width = `${(currentRound / totalRounds) * 100}%`;
             
-            if (isRoundingEnabled) {
-                text.textContent = 'ปัดเศษ: เปิด';
-                icon.className = 'fa-solid fa-wand-magic-sparkles';
-                document.getElementById('btnToggleRound').classList.replace('bg-amber-600/20', 'bg-amber-600');
-                document.getElementById('btnToggleRound').classList.replace('text-amber-400', 'text-white');
-            } else {
-                text.textContent = 'ปัดเศษ: ปิด';
-                icon.className = 'fa-solid fa-calculator';
-                document.getElementById('btnToggleRound').classList.replace('bg-amber-600', 'bg-amber-600/20');
-                document.getElementById('btnToggleRound').classList.replace('text-white', 'text-amber-400');
-            }
-            applySortingAndRender();
-        });
-
-        // --- ระบบสลับการเรียงลำดับข้อมูล ---
-        document.getElementById('btnSortMode').addEventListener('click', () => {
-            const icon = document.getElementById('sortIcon');
-            const text = document.getElementById('sortModeText');
-            
-            if (currentSortMode === 'time') {
-                currentSortMode = 'number';
-                text.textContent = 'เรียงตามเวลาล่าสุด';
-                icon.className = 'fa-solid fa-clock-rotate-left';
-            } else {
-                currentSortMode = 'time';
-                text.textContent = 'เรียงตามเลขที่';
-                icon.className = 'fa-solid fa-arrow-down-1-9';
-            }
-            applySortingAndRender();
-        });
-
-        function applySortingAndRender() {
-            let sortedList = [...rawScoresList];
-            
-            if (currentSortMode === 'time') {
-                sortedList.sort((a, b) => b.timestamp - a.timestamp);
-            } else if (currentSortMode === 'number') {
-                sortedList.sort((a, b) => {
-                    const numA = parseInt(a.studentName.match(/\d+/)?.[0] || 0);
-                    const numB = parseInt(b.studentName.match(/\d+/)?.[0] || 0);
-                    return numA - numB;
-                });
-            }
-            
-            renderLeaderboard(sortedList);
-        }
-
-        function renderLeaderboard(scores) {
-            const tbody = document.getElementById('leaderboardBody');
-            const emptyBoard = document.getElementById('emptyBoard');
-            
-            if (scores.length === 0) {
-                tbody.innerHTML = ""; emptyBoard.classList.remove('hidden'); return;
-            }
-
-            emptyBoard.classList.add('hidden');
-            tbody.innerHTML = "";
-
-            scores.forEach((entry, index) => {
-                const date = new Date(entry.timestamp);
-                const timeString = `${date.toLocaleDateString('th-TH')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} น.`;
-                
-                // ตรวจสอบสถานะการปัดเศษคะแนน
-                let displayScore = entry.score;
-                if (isRoundingEnabled) {
-                    displayScore = Math.round(entry.score); // ใช้ Math.round เพื่อปัดตามหลักคณิตศาสตร์
+            const fields = ['mask', 'network', 'broadcast', 'first', 'last'];
+            fields.forEach(field => {
+                const group = document.getElementById(`group-${field}`);
+                if (group) group.className = 'octet-container';
+                for (let i = 1; i <= 4; i++) {
+                    const input = document.getElementById(`ans-${field}-${i}`);
+                    if (input) { input.value = ''; input.disabled = false; }
                 }
-
-                const percentage = (displayScore / entry.maxScore) * 100;
-                let scoreColor = "text-red-400";
-                if (percentage >= 80) scoreColor = "text-emerald-400 font-bold";
-                else if (percentage >= 50) scoreColor = "text-yellow-400";
-
-                const row = `
-                    <tr class="hover:bg-slate-800/50 transition border-b border-slate-700/50">
-                        <td class="px-6 py-4 font-medium">${index + 1}</td>
-                        <td class="px-6 py-4 text-white font-medium">${entry.studentName}</td>
-                        <td class="px-6 py-4 text-center ${scoreColor}">${displayScore} / ${entry.maxScore}</td>
-                        <td class="px-6 py-4 text-xs text-slate-500">${timeString}</td>
-                        <td class="px-6 py-4 text-center space-x-2">
-                            <button onclick="viewDetails('${entry.id}')" class="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded transition text-sm" title="ดูข้อผิด">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </button>
-                            <button onclick="deleteScore('${entry.id}')" class="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded transition text-sm" title="ลบข้อมูล">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
             });
+            generateRandomQuestion();
         }
 
-        window.deleteScore = async function(docId) {
-            if (confirm("⚠️ แน่ใจหรือไม่ที่จะลบคะแนนของนักศึกษาคนนี้?\nการลบจะไม่สามารถกู้คืนได้")) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'subnet_scores', docId));
-                } catch (error) {
-                    console.error("Error deleting document: ", error);
-                    alert("ไม่สามารถลบข้อมูลได้ กรุณาตรวจสอบสิทธิ์ Firebase Rules ให้เปิด allow delete: if true;");
-                }
-            }
-        }
+        async function finishGame() {
+            const overlay = document.getElementById('savingOverlay');
+            overlay.classList.remove('hidden');
+            
+            const rawMaxScore = totalRounds * pointsPerQuestion;
+            const actualMaxScore = 10;
+            let finalScaledScore = (score / rawMaxScore) * actualMaxScore;
+            finalScaledScore = Number(finalScaledScore.toFixed(2));
+            
+            try {
+                if (!currentUser) throw new Error("ไม่มีสิทธิ์การเข้าถึง (ไม่ได้ Login แบบ Anonymous)");
+                if (!db) throw new Error("การตั้งค่า Firebase Config ไม่ถูกต้อง");
 
-        window.viewDetails = function(docId) {
-            const data = window.globalScoreData[docId];
-            if (!data) return;
+                const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'subnet_scores');
+                
+                const scoreData = { 
+                    studentName: studentName, 
+                    score: finalScaledScore,
+                    maxScore: actualMaxScore,
+                    rawScore: score,
+                    history: examHistory, // ส่งประวัติการทำข้อสอบแนบไปด้วย
+                    timestamp: Date.now() 
+                };
 
-            document.getElementById('modalStudentName').textContent = data.studentName;
-            const contentDiv = document.getElementById('modalHistoryContent');
-            contentDiv.innerHTML = '';
-
-            if (!data.history || data.history.length === 0) {
-                contentDiv.innerHTML = `<div class="text-center text-slate-500 py-8">ไม่มีประวัติการตอบบันทึกไว้ในระบบ</div>`;
-                document.getElementById('detailsModal').classList.remove('hidden');
-                return;
-            }
-
-            data.history.forEach(round => {
-                let html = `
-                    <div class="bg-slate-900 border border-slate-700 rounded-xl p-5 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-slate-800 px-3 py-1 text-xs text-slate-400 rounded-bl-lg font-bold border-b border-l border-slate-700">ข้อที่ ${round.round}</div>
-                        <p class="text-slate-400 text-sm mb-1 uppercase tracking-wider">โจทย์</p>
-                        <h4 class="text-2xl font-bold text-white mb-4 tracking-wider">${round.question}</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                `;
-
-                round.details.forEach(field => {
-                    const isCorrect = field.isCorrect;
-                    const icon = isCorrect ? '<i class="fa-solid fa-check text-emerald-500"></i>' : '<i class="fa-solid fa-xmark text-red-500"></i>';
-                    const bgClass = isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30';
-                    const correctAnsHtml = !isCorrect ? `<div class="text-xs text-emerald-400 mt-1">เฉลยที่ถูกต้อง: ${field.correctAnswer}</div>` : '';
-
-                    html += `
-                        <div class="border rounded-lg p-3 ${bgClass}">
-                            <div class="text-xs text-slate-400 font-semibold mb-1">${fieldNames[field.fieldKey]}</div>
-                            <div class="flex items-center gap-2">
-                                ${icon} <span class="${isCorrect ? 'text-white' : 'text-red-300 line-through'}">${field.userAnswer}</span>
-                            </div>
-                            ${correctAnsHtml}
-                        </div>
-                    `;
+                const savePromise = addDoc(scoresRef, scoreData);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error("เซิร์ฟเวอร์ฐานข้อมูลไม่ตอบสนอง")), 8000);
                 });
 
-                html += `</div></div>`;
-                contentDiv.insertAdjacentHTML('beforeend', html);
-            });
+                await Promise.race([savePromise, timeoutPromise]);
 
-            document.getElementById('detailsModal').classList.remove('hidden');
+                overlay.classList.add('hidden');
+                hideAllScreens();
+                document.getElementById('screenEnd').classList.remove('hidden');
+                document.getElementById('finalScoreDisplay').textContent = finalScaledScore; 
+
+            } catch (error) { 
+                console.error("Error saving score:", error); 
+                alert(`⚠️ เกิดข้อผิดพลาดในการส่งคะแนน\nสาเหตุ: ${error.message}\n\n*ระบบจะพาไปที่หน้าสรุปผล กรุณาแคปหน้าจอคะแนนส่งอาจารย์เพื่อเป็นหลักฐาน*`);
+                overlay.classList.add('hidden');
+                hideAllScreens();
+                document.getElementById('screenEnd').classList.remove('hidden');
+                document.getElementById('finalScoreDisplay').textContent = finalScaledScore; 
+            }
         }
 
-        document.getElementById('btnCloseModal').addEventListener('click', () => {
-            document.getElementById('detailsModal').classList.add('hidden');
+        document.addEventListener('DOMContentLoaded', () => {
+            const allOctetInputs = document.querySelectorAll('.octet-input');
+            allOctetInputs.forEach((input, index) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === '.' || e.key === ' ') {
+                        e.preventDefault();
+                        if (index < allOctetInputs.length - 1) allOctetInputs[index + 1].focus();
+                    }
+                    if (e.key === 'Backspace' && input.value === '') {
+                        if (index > 0) allOctetInputs[index - 1].focus();
+                    }
+                });
+
+                input.addEventListener('input', (e) => {
+                    input.value = input.value.replace(/[^0-9]/g, '');
+                    if (input.value.length === 3 && index < allOctetInputs.length - 1) {
+                        allOctetInputs[index + 1].focus();
+                    }
+                });
+            });
+
+            try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } catch (e) { console.error("Firebase Init Error:", e); }
+
+            if (auth) {
+                signInAnonymously(auth).catch(e => console.error("Auth Error:", e));
+                onAuthStateChanged(auth, (user) => {
+                    if(user) {
+                        currentUser = user;
+                        const overlay = document.getElementById('loadingOverlay');
+                        const loginScreen = document.getElementById('screenStudentLogin');
+                        if (overlay) overlay.classList.add('hidden');
+                        if (loginScreen) loginScreen.classList.remove('hidden');
+                    }
+                });
+            }
+
+            const btnStartIntro = document.getElementById('btnStartIntro');
+            if (btnStartIntro) {
+                btnStartIntro.addEventListener('click', () => {
+                    const fName = document.getElementById('firstNameInput').value.trim();
+                    const lName = document.getElementById('lastNameInput').value.trim();
+                    const sNum = document.getElementById('studentNumberInput').value.trim();
+                    if (!fName || !lName || !sNum) { alert("กรุณากรอกข้อมูลให้ครบถ้วน"); return; }
+                    studentName = `เลขที่ ${sNum} - ${fName} ${lName}`;
+                    document.getElementById('displayStudentName').textContent = studentName;
+                    hideAllScreens();
+                    document.getElementById('screenStart').classList.remove('hidden');
+                });
+            }
+
+            const btnStartGame = document.getElementById('btnStartGame');
+            if (btnStartGame) {
+            btnStartGame.addEventListener('click', () => {
+                // เปลี่ยนโจทย์เป็น Class C ทั้งหมด 3 ข้อ
+                questionPool = ['C', 'C', 'C'];
+                shuffleArray(questionPool);
+                hideAllScreens();
+                document.getElementById('screenPlay').classList.remove('hidden');
+                startRound();
+            });
+        }
+
+            const btnSubmitRound = document.getElementById('btnSubmitRound');
+            if (btnSubmitRound) {
+                btnSubmitRound.addEventListener('click', () => {
+                    document.getElementById('actionModal').classList.remove('hidden');
+                    document.getElementById('modalStateConfirm').classList.remove('hidden');
+                });
+            }
+
+            const btnCancelSubmit = document.getElementById('btnCancelSubmit');
+            if (btnCancelSubmit) {
+                btnCancelSubmit.addEventListener('click', () => {
+                    document.getElementById('actionModal').classList.add('hidden');
+                });
+            }
+
+            const btnConfirmSubmit = document.getElementById('btnConfirmSubmit');
+            if (btnConfirmSubmit) {
+                btnConfirmSubmit.addEventListener('click', async () => {
+                    document.getElementById('modalStateConfirm').classList.add('hidden');
+                    const fields = ['mask', 'network', 'broadcast', 'first', 'last'];
+                    let roundScore = 0;
+                    
+                    // บันทึกโจทย์ของข้อนี้
+                    let currentLog = {
+                        round: currentRound,
+                        question: document.getElementById('targetIpDisplay').textContent + document.getElementById('targetMaskDisplay').textContent,
+                        details: []
+                    };
+                    
+                    fields.forEach(field => {
+                        let userAnsParts = [];
+                        for (let i = 1; i <= 4; i++) {
+                            const input = document.getElementById(`ans-${field}-${i}`);
+                            if (input) {
+                                userAnsParts.push(input.value.trim() || '0'); 
+                                input.disabled = true; 
+                            }
+                        }
+                        const userAnsFull = userAnsParts.join('.');
+                        const isCorrect = (userAnsFull === currentSolution[field]);
+
+                        // เก็บรายละเอียดการตอบแต่ละช่อง
+                        currentLog.details.push({
+                            fieldKey: field,
+                            userAnswer: userAnsFull,
+                            correctAnswer: currentSolution[field],
+                            isCorrect: isCorrect
+                        });
+
+                        if (isCorrect) { roundScore += 2; }
+                    });
+
+                    examHistory.push(currentLog); // เอาเก็บเข้าตะกร้าประวัติ
+                    score += roundScore;
+                    document.getElementById('actionModal').classList.add('hidden');
+
+                    if (currentRound >= totalRounds) {
+                        await finishGame();
+                    } else {
+                        currentRound++;
+                        const screenPlay = document.getElementById('screenPlay');
+                        screenPlay.classList.add('ring-4', 'ring-blue-500');
+                        setTimeout(() => {
+                            screenPlay.classList.remove('ring-4', 'ring-blue-500');
+                            startRound();
+                        }, 400);
+                    }
+                });
+            }
         });
     </script>
 </body>
