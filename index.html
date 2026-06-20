@@ -71,7 +71,7 @@
         <div class="bg-slate-700/50 rounded-xl p-4 mb-8 text-left text-sm text-slate-300">
             <ul class="list-disc list-inside space-y-2">
                 <li>โจทย์จะสุ่ม IP และ Subnet Mask ให้</li>
-                <li>มีทั้งหมด 3 ข้อ (Class C: 2 ข้อ, Class B: 1 ข้อ)</li>
+                <li>มีทั้งหมด 3 ข้อ (สุ่มโจทย์ Class C ทั้งหมด)</li>
                 <li>1 ข้อ ตอบได้ 1 ครั้ง กรุณาตรวจสอบให้แน่ใจก่อนกดยืนยัน</li>
             </ul>
         </div>
@@ -272,27 +272,21 @@
         }
 
         function generateRandomQuestion() {
-            const currentClass = questionPool[currentRound - 1];
-            let ip1, ip2, ip3, ip4, mask;
+            // ล็อกเป็น Class C (192.168) เสมอ
+            let ip1 = 192; 
+            let ip2 = 168; 
             
-            if (currentClass === 'B') {
-                // ล็อก Class B ให้เป็น 172.16 เสมอ
-                ip1 = 172; 
-                ip2 = 16; 
-                mask = Math.floor(Math.random() * (26 - 16 + 1)) + 16; // สุ่ม /16 ถึง /26
-            } else {
-                // ล็อก Class C ให้เป็น 192.168 เสมอ
-                ip1 = 192; 
-                ip2 = 168; 
-                mask = Math.floor(Math.random() * (29 - 24 + 1)) + 24; // สุ่ม /24 ถึง /29
-            }
+            // สุ่ม /24 ถึง /29
+            const possibleMasksC = [24, 25, 26, 27, 28, 29];
+            let mask = possibleMasksC[Math.floor(Math.random() * possibleMasksC.length)];
             
-            // สุ่มแค่ 2 ชุดหลัง (Octet 3 และ 4)
-            ip3 = Math.floor(Math.random() * 256); 
-            ip4 = Math.floor(Math.random() * 256);
+            // สุ่ม 2 Octet หลัง
+            let ip3 = Math.floor(Math.random() * 256); 
+            let ip4 = Math.floor(Math.random() * 256);
 
             const ipString = `${ip1}.${ip2}.${ip3}.${ip4}`;
             const ipInt = ipToInt(ipString);
+            
             const maskInt = (0xFFFFFFFF << (32 - mask)) >>> 0;
             const networkInt = (ipInt & maskInt) >>> 0;
             const broadcastInt = (networkInt | (~maskInt) >>> 0) >>> 0;
@@ -423,14 +417,15 @@
 
             const btnStartGame = document.getElementById('btnStartGame');
             if (btnStartGame) {
-                btnStartGame.addEventListener('click', () => {
-                    questionPool = ['C', 'C', 'B'];
-                    shuffleArray(questionPool);
-                    hideAllScreens();
-                    document.getElementById('screenPlay').classList.remove('hidden');
-                    startRound();
-                });
-            }
+            btnStartGame.addEventListener('click', () => {
+                // เปลี่ยนโจทย์เป็น Class C ทั้งหมด 3 ข้อ
+                questionPool = ['C', 'C', 'C'];
+                shuffleArray(questionPool);
+                hideAllScreens();
+                document.getElementById('screenPlay').classList.remove('hidden');
+                startRound();
+            });
+        }
 
             const btnSubmitRound = document.getElementById('btnSubmitRound');
             if (btnSubmitRound) {
